@@ -9,7 +9,7 @@ Thank you for your interest in contributing to `epigenetic-memory-loss-methylati
 2. **Clone your fork**: Clone your forked repository to your local development environment.
 
     ```bash
-    git clone https://github.com/epigenetic-memory-loss-methylation/epigenetic-memory-loss-methylation.git
+    git clone https://github.com/hackbio-ca/epigenetic-memory-loss-methylation.git
     ```
 
 3. **Create a new branch**: Create a new branch for your changes. Use a descriptive branch name that indicates the work you are doing.
