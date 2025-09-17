@@ -1,6 +1,6 @@
-# demo-project
+# epigenetic-memory-loss-methylation
 
-A brief description of the project. Explain what it does and who it's for.
+Epigenetic Markers of Memory Loss: Using DNA Methylation Profiles to Predict Cognitive Impairment and Dementia
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
