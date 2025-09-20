@@ -10,154 +10,53 @@ Epigenetics involves the changes in gene expression without altering the DNA seq
 
 ## Installation
 
-Install the required dependencies for the project:
+Provide instructions on how to install and set up the project, such as installing dependencies and preparing the environment.
 
 ```bash
-# Install Python dependencies
-pip install -r requirements.txt
+# Example command to install dependencies (Python)
+pip install project-dependencies
+
+# Example command to install dependencies (R)
+install.packages("project-dependencies")
 ```
 
 ## Quick Start
 
-### 1. Start the FastAPI Server
+Provide a basic usage example or minimal code snippet that demonstrates how to use the project.
 
-```bash
-# Run the new backend server
-python run_backend.py
-```
-
-The server will start at `http://localhost:8000` with:
-- **Web interface**: `http://localhost:8000` (Enhanced UI with demo data)
-- **API documentation**: `http://localhost:8000/docs`
-- **Health check**: `http://localhost:8000/api/v1/health`
-- **Demo prediction**: `http://localhost:8000/api/v1/predict-demo`
-
-### 2. Upload DNA Methylation Data
-
-You can upload DNA methylation data in two ways:
-
-#### Web Interface
-1. Open `http://localhost:8000` in your browser
-2. **Upload a CSV file** with methylation data OR **click "Use Demo Data"** for instant testing
-3. View enhanced prediction results with:
-   - Clear risk percentage (e.g., "82% risk")
-   - Risk level classification (Low/Moderate/High)
-   - Confidence and calibration scores
-   - Visual probability bars
-   - Model reliability indicators
-
-#### API Endpoints
 ```python
-import requests
+# Example usage (Python)
+import my_project
 
-# Upload file via API
-with open('sample_methylation_data.csv', 'rb') as f:
-    response = requests.post('http://localhost:8000/api/v1/predict', files={'file': f})
-    result = response.json()
-    print(f"Prediction: {result['prediction']}")
-    print(f"Risk Level: {result['risk_level']}")
-    print(f"Risk Percentage: {result['risk_percentage']:.1f}%")
-    print(f"Confidence: {result['confidence']:.2%}")
+demo = my_project.example_function()
+print(demo)
+```
+```r
+# Example usage (R)
+library(my_project)
 
-# Use demo data for instant testing
-response = requests.post('http://localhost:8000/api/v1/predict-demo')
-result = response.json()
-print(f"Demo Prediction: {result['prediction']}")
+demo <- example_function()
+print(demo)
 ```
 
 ## Usage
 
-### Data Format
+Add detailed information and examples on how to use the project, covering its major features and functions.
 
-The API expects CSV files with DNA methylation data where:
-- **Rows**: CpG sites (methylation markers)
-- **Columns**: Samples
-- **Values**: Methylation beta values (0-1 range)
+```python
+# More usage examples (Python)
+import my_project
 
-Example format:
-```csv
-CpG Sites,Sample_1,Sample_2,Sample_3
-cg00000029,0.8,0.7,0.9
-cg00000108,0.6,0.5,0.8
-...
+demo = my_project.advanced_function(parameter1='value1')
+print(demo)
 ```
+```r
+# More usage examples (R)
+library(demoProject)
 
-### API Endpoints
-
-#### POST `/api/v1/predict`
-Upload a CSV file for prediction analysis.
-
-#### POST `/api/v1/predict-json`
-Send methylation data as JSON for prediction.
-
-#### POST `/api/v1/predict-demo`
-Use demo data for instant testing (judge-friendly).
-
-#### GET `/api/v1/model-info`
-Get detailed information about the loaded model.
-
-#### GET `/api/v1/health`
-Check server and model status.
-
-#### GET `/api/v1/sample-data-info`
-Get information about available demo datasets.
-
-**Enhanced Response Format:**
-```json
-{
-  "sample_id": "filename.csv",
-  "prediction": "Alzheimer's",
-  "confidence": 0.85,
-  "probabilities": {
-    "Control": 0.10,
-    "MCI": 0.05,
-    "Alzheimer's": 0.85
-  },
-  "feature_importance": {...},
-  "model_insights": {
-    "model_type": "sklearn/xgboost",
-    "total_features": 1000,
-    "model_accuracy": 0.85,
-    "timestamp": "2024-01-01T12:00:00"
-  },
-  "risk_level": "High Risk",
-  "risk_percentage": 85.0,
-  "calibration_score": 0.78
-}
+demo <- advanced_function(parameter1 = "value1")
+print(demo)
 ```
-
-### Model Outputs
-
-The system provides three prediction classes:
-- **Control**: Healthy individuals
-- **MCI**: Mild Cognitive Impairment
-- **Alzheimer's**: Alzheimer's Disease
-
-Each prediction includes:
-- **Clear Risk Percentage**: Exact risk percentage (e.g., "82% risk")
-- **Risk Level Classification**: Low/Moderate/High risk with color coding
-- **Confidence Score**: Model's certainty (0-1)
-- **Class Probabilities**: Visual probability bars for each class
-- **Feature Importance**: Most influential CpG sites
-- **Model Calibration**: Reliability and calibration scores
-- **Clinical Assessment**: Risk interpretation and recommendations
-
-## 🎯 Key Features for Judges
-
-### **Demo Data Button**
-- **One-click testing**: No need to scramble for test data
-- **Instant results**: Immediate prediction with sample data
-- **Consistent testing**: Same demo data for all evaluations
-
-### **Enhanced Risk Display**
-- **Clear percentages**: "82% Alzheimer's risk" instead of just "High risk"
-- **Visual indicators**: Color-coded risk levels and probability bars
-- **Confidence metrics**: Model reliability and calibration scores
-
-### **Professional Interface**
-- **Drag & drop upload**: Easy file handling
-- **Real-time feedback**: Loading states and progress indicators
-- **Comprehensive results**: All metrics in one view
 
 ## Contribute
 
