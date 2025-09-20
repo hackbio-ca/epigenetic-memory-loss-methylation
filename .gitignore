@@ -1,0 +1,11 @@
+# Virtual Environment & Dumps
+venv
+__pycache__
+
+# Large Data Files
+*.csv
+*.h5
+
+# Model files
+*.bin
+*.pkl
