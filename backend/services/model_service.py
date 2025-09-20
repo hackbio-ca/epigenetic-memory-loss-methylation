@@ -38,11 +38,12 @@ class ModelService:
                     if hasattr(self.model, 'n_classes_'):
                         if self.model.n_classes_ == 2:
                             self.is_binary = True
-                            # Keep full class names for 3-class output format
-                            self.class_names = {0: DiseaseClass.CONTROL, 1: DiseaseClass.MCI, 2: DiseaseClass.ALZHEIMERS}
-                            logger.info("Loaded binary classifier model")
+                            logger.info("Loaded binary classifier model (will convert to 3-class output)")
+                        elif self.model.n_classes_ == 3:
+                            self.is_binary = False
+                            logger.info("Loaded 3-class classifier model (0=Control, 1=MCI, 2=Alzheimer's)")
                         else:
-                            logger.info("Loaded multiclass classifier model")
+                            logger.info(f"Loaded {self.model.n_classes_}-class classifier model")
                     else:
                         logger.info("Loaded scikit-learn/XGBoost model")
                         
@@ -101,10 +102,13 @@ class ModelService:
         if hasattr(self.model, 'predict_proba'):
             probabilities = self.model.predict_proba(data)
             
-            # Handle binary classification
-            if self.is_binary and probabilities.shape[1] == 2:
-                # Convert binary probabilities to 3-class format
-                # Binary: [Control, Alzheimer's] -> [Control, MCI, Alzheimer's]
+            # Handle 3-class prediction (0, 1, 2)
+            if probabilities.shape[1] == 3:
+                # Direct 3-class case: [Control, MCI, Alzheimer's]
+                prediction_idx = int(np.argmax(probabilities[0]))
+                confidence = float(np.max(probabilities[0]))
+            elif probabilities.shape[1] == 2 and self.is_binary:
+                # Handle binary classification if needed
                 control_prob = float(probabilities[0][0])
                 alz_prob = float(probabilities[0][1])
                 # Distribute MCI probability based on the ratio
@@ -118,17 +122,16 @@ class ModelService:
                 prediction_idx = int(np.argmax(probabilities[0]))
                 confidence = float(np.max(probabilities[0]))
             else:
-                # Multiclass case
+                # Fallback for other cases
                 prediction_idx = int(np.argmax(probabilities[0]))
                 confidence = float(np.max(probabilities[0]))
         else:
+            # No predict_proba method - use predict only
             prediction_result = self.model.predict(data)
             prediction_idx = int(prediction_result[0]) if hasattr(prediction_result, '__len__') else int(prediction_result)
             confidence = 1.0
-            if self.is_binary:
-                probabilities = np.array([[0.5, 0.0, 0.5]])  # Binary case
-            else:
-                probabilities = np.array([[0.33, 0.33, 0.34]])  # Multiclass case
+            # Create dummy probabilities for 3-class case
+            probabilities = np.array([[0.33, 0.33, 0.34]])
         
         feature_importance = self._get_feature_importance_sklearn()
         
