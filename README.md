@@ -6,7 +6,7 @@ Epigenetic Markers of Memory Loss: Using DNA Methylation Profiles to Predict Cog
 
 ## Abstract
 
-A concise summary of the project's goals, the problem it addresses, and its intended audience. This section can include potential use cases and key features.
+Epigenetics involves the changes in gene expression without altering the DNA sequence and can be passed down through generations. It is regulated by chemical modifications which alter the DNA molecule to inhibit or express a gene. One such mechanism is called DNA methylation which adds a methyl group to the CpG dinucleotide of the DNA molecule. Both environmental factors and genetics can shape DNA methylation patterns and whether or not a gene is expressed. Alzheimer’s disease, a neurodegenerative condition affected by both genetic factors and environment, may therefore be studied through these epigenetic signatures. By analyzing DNA methylation profiles, we aim to monitor cognitive decline, identify disease-associated genes and CpG sites, and predict Alzheimer’s risk using machine learning. In this project, DNA methylation profiles extracted from blood samples of individuals with Alzheimer’s disease, those experiencing cognitive impairment, and healthy controls will be used to create a dataset for training the machine learning model. This model will predict the likelihood of Alzheimer’s as well as monitor cognitive decline based on methylation patterns. Furthermore, by analyzing feature importance scores from the trained model, we can identify the specific methylation sites and genes most strongly associated with Alzheimer’s, offering valuable insights into disease mechanisms, potential biomarkers, and cognitive impairment.
 
 ## Installation
 
