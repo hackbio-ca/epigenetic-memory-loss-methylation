@@ -6,6 +6,7 @@ __pycache__
 *.csv
 *.h5
 *.zip
+*.npy
 
 # Model files
 *.bin

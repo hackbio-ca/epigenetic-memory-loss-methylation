@@ -8,3 +8,6 @@ plotly
 h5py
 joblib
 seaborn
+statsmodels
+umap-learn
+umap-learn[plot]

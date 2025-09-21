@@ -14,10 +14,15 @@ def load_data(cpg_path: str, mapping_path: str, indices: tuple[int,int]=[1000,50
 	mapping_df = mapping_df.loc[cpg_df.index]
 	# Merge data and labels
 	merged = pd.concat([cpg_df, mapping_df], axis=1, join='outer')
+	# Drop rows with NaN on merged
+	merged = merged.dropna()
 	labels = merged['disease_state'].map({'control': 0, 'MCI': 1, "Alzheimer's": 2}).values
 	data = merged.drop(columns=['disease_state', 'series_id', 'sex', 'age']).values
-	print(f"Loaded dataset with {data.shape[0]} samples and {data.shape[1]} features.")
-	
+	# print(f"Loaded dataset with {data.shape[0]} samples and {data.shape[1]} features.")
+	# Return full data if no indices provided
+	if indices is None:
+		return data, labels
+	# Slice data if indices provided
 	i_spl, i_ft = indices
 	i_spl, i_ft = min(i_spl, data.shape[0]), min(i_ft, data.shape[1])
 	return data[:, :i_ft], labels[:i_spl]
@@ -28,8 +33,12 @@ def load_data_h5(h5_path: str, mapping_path: str, indices: tuple[int,int]=[1000,
 	mapping_df = pd.read_csv(mapping_path)
 	with h5py.File(h5_path, 'r') as h5f:
 		data = h5f['data'][:]
-	print(f"Loaded dataset with {data.shape[0]} samples and {data.shape[1]} features.")
+	# print(f"Loaded dataset with {data.shape[0]} samples and {data.shape[1]} features.")
 	labels = mapping_df['disease_state'].map({'control': 0, 'MCI': 1, "Alzheimer's": 2}).values
+	# Iterate through the rows of data and get each row that has a NaN valued cell
+	nan_rows = np.any(np.isnan(data), axis=0)
+	# Remove rows with NaN values and labels
+	data = data[:, ~nan_rows]
 	# Return full data if no indices provided
 	if indices is None: 
 		return data, labels
@@ -47,5 +56,5 @@ if __name__ == "__main__":
 	# print(f"Data shape: {data.shape}, Labels shape: {labels.shape}")
 	# .h5
 	h5_path = './model/data/train/methylation.h5'
-	data_h5, labels_h5 = load_data_h5(h5_path, mapping_path)
+	data_h5, labels_h5 = load_data_h5(h5_path, mapping_path, indices=None)
 	print(f"Data shape: {data_h5.shape}, Labels shape: {labels_h5.shape}")
