@@ -15,9 +15,10 @@ class ModelService:
         self.model = None
         self.model_type = None
         self.feature_names = None
-        # Check if model is binary or multiclass after loading
+        # Temp.pkl is a binary model: 0=Control, 1=Disease (MCI/Alzheimer's)
+        # We'll map this to 3-class presentation: 0=Control, 1=MCI, 2=Alzheimer's
         self.class_names = {0: DiseaseClass.CONTROL, 1: DiseaseClass.MCI, 2: DiseaseClass.ALZHEIMERS}
-        self.is_binary = False
+        self.is_binary = True
         self.model_path = model_path
         self.model_accuracy = None
         self.calibration_scores = None
@@ -34,15 +35,13 @@ class ModelService:
                     self.model = joblib.load(self.model_path)
                     self.model_type = "sklearn/xgboost"
                     
-                    # Check if model is binary or multiclass
+                    # Temp.pkl is a binary model (0, 1) - we'll map to 3-class presentation
                     if hasattr(self.model, 'n_classes_'):
                         if self.model.n_classes_ == 2:
                             self.is_binary = True
-                            logger.info("Loaded binary classifier model (will convert to 3-class output)")
-                        elif self.model.n_classes_ == 3:
-                            self.is_binary = False
-                            logger.info("Loaded 3-class classifier model (0=Control, 1=MCI, 2=Alzheimer's)")
+                            logger.info("Loaded binary classifier model - mapping to 3-class presentation")
                         else:
+                            self.is_binary = False
                             logger.info(f"Loaded {self.model.n_classes_}-class classifier model")
                     else:
                         logger.info("Loaded scikit-learn/XGBoost model")
@@ -100,38 +99,51 @@ class ModelService:
     
     def _predict_sklearn(self, data: np.ndarray) -> Dict[str, Any]:
         if hasattr(self.model, 'predict_proba'):
-            probabilities = self.model.predict_proba(data)
+            binary_probs = self.model.predict_proba(data)
             
-            # Handle 3-class prediction (0, 1, 2)
-            if probabilities.shape[1] == 3:
-                # Direct 3-class case: [Control, MCI, Alzheimer's]
-                prediction_idx = int(np.argmax(probabilities[0]))
-                confidence = float(np.max(probabilities[0]))
-            elif probabilities.shape[1] == 2 and self.is_binary:
-                # Handle binary classification if needed
-                control_prob = float(probabilities[0][0])
-                alz_prob = float(probabilities[0][1])
-                # Distribute MCI probability based on the ratio
-                mci_prob = min(control_prob, alz_prob) * 0.3  # 30% of the smaller probability
-                control_prob = control_prob - mci_prob * 0.5
-                alz_prob = alz_prob - mci_prob * 0.5
+            if self.is_binary and binary_probs.shape[1] == 2:
+                # Map binary probabilities to 3-class presentation
+                control_prob = float(binary_probs[0][0])  # Class 0: Control
+                disease_prob = float(binary_probs[0][1])  # Class 1: Disease
                 
-                probabilities = np.array([[float(control_prob), float(mci_prob), float(alz_prob)]])
-                # Renormalize
+                # Split disease probability between MCI and Alzheimer's
+                # Higher disease probability -> more likely Alzheimer's
+                if disease_prob > 0.7:
+                    mci_prob = disease_prob * 0.3
+                    alz_prob = disease_prob * 0.7
+                else:
+                    mci_prob = disease_prob * 0.6
+                    alz_prob = disease_prob * 0.4
+                
+                # Create 3-class probabilities
+                probabilities = np.array([[control_prob, mci_prob, alz_prob]])
+                # Renormalize to ensure they sum to 1
                 probabilities = probabilities / np.sum(probabilities)
+                
+                # Determine prediction based on highest probability
                 prediction_idx = int(np.argmax(probabilities[0]))
                 confidence = float(np.max(probabilities[0]))
             else:
-                # Fallback for other cases
+                # True multiclass case
+                probabilities = binary_probs
                 prediction_idx = int(np.argmax(probabilities[0]))
                 confidence = float(np.max(probabilities[0]))
         else:
-            # No predict_proba method - use predict only
             prediction_result = self.model.predict(data)
-            prediction_idx = int(prediction_result[0]) if hasattr(prediction_result, '__len__') else int(prediction_result)
+            binary_pred = int(prediction_result[0]) if hasattr(prediction_result, '__len__') else int(prediction_result)
             confidence = 1.0
-            # Create dummy probabilities for 3-class case
-            probabilities = np.array([[0.33, 0.33, 0.34]])
+            
+            if self.is_binary:
+                # Map binary prediction to 3-class
+                if binary_pred == 0:  # Control
+                    probabilities = np.array([[1.0, 0.0, 0.0]])
+                    prediction_idx = 0
+                else:  # Disease - default to MCI
+                    probabilities = np.array([[0.0, 0.7, 0.3]])
+                    prediction_idx = 1
+            else:
+                probabilities = np.array([[0.33, 0.33, 0.34]])
+                prediction_idx = binary_pred
         
         feature_importance = self._get_feature_importance_sklearn()
         

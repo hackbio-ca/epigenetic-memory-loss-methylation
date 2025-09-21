@@ -4,6 +4,12 @@ import io
 import logging
 from typing import Dict, Any, Tuple, Optional
 from fastapi import UploadFile
+import h5py
+
+#Load selected features
+total_mean_SHAP_values = np.loadtxt("Disease_SHAP_Values.txt")
+topNFeatures = np.argsort(total_mean_SHAP_values)[-500:][::-1].tolist()
+featureIndices = np.array(sorted(topNFeatures))
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +35,7 @@ class DataService:
             if len(content) > self.max_file_size:
                 raise ValueError(f"File too large. Maximum size: {self.max_file_size / (1024*1024):.1f}MB")
             
-            df = pd.read_csv(io.BytesIO(content))
+            df = pd.read_csv(io.BytesIO(content), index_col=0)
             
             if df.empty:
                 raise ValueError("Empty CSV file")
@@ -40,8 +46,27 @@ class DataService:
                 "rows": len(df),
                 "columns": len(df.columns)
             }
+
+            # Convert back to numpy array
+            data_array = df.T.values   # shape will be (1, n_features)
             
-            data = self._preprocess_dataframe(df, metadata)
+            # Apply feature selection using the top 500 features
+            if data_array.shape[1] >= len(featureIndices):
+                data = data_array[0, featureIndices]
+                data = data.reshape(1, -1)
+            else:
+                # If we don't have enough features, pad with zeros or use available features
+                logger.warning(f"Not enough features in data. Expected {len(featureIndices)}, got {data_array.shape[1]}")
+                if data_array.shape[1] > 0:
+                    # Use available features up to the limit
+                    available_indices = featureIndices[featureIndices < data_array.shape[1]]
+                    data = data_array[0, available_indices]
+                    # Pad with zeros if needed
+                    if len(available_indices) < len(featureIndices):
+                        padding = np.zeros((1, len(featureIndices) - len(available_indices)))
+                        data = np.concatenate([data, padding], axis=1)
+                else:
+                    raise ValueError("No valid features found in the data")
             
             return data, metadata
             
