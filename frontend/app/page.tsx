@@ -175,132 +175,202 @@ export default function HomePage() {
             </DialogDescription>
           </DialogHeader>
           <div className="mt-6 space-y-6">
-            {analysisResults?.results?.[0]?.predictions_with_ids ? (
+            {analysisResults?.results && analysisResults.results.length > 0 ? (
               <>
-                {/* Summary Cards */}
-                <div className="grid grid-cols-3 gap-6 mb-8">
-                  {(() => {
-                    const predictions = analysisResults.results[0].predictions_with_ids;
-                    const counts = { control: 0, mci: 0, alzheimer: 0 };
-                    predictions.forEach((item: any) => {
-                      if (item.prediction === 0) counts.control++;
-                      else if (item.prediction === 1) counts.mci++;
-                      else if (item.prediction === 2) counts.alzheimer++;
-                    });
-                    
-                    return (
-                      <>
-                        <Card className="border-blue-300 bg-blue-50 shadow-lg">
-                          <CardContent className="p-6 text-center">
-                            <div className="text-3xl font-bold text-blue-700">{counts.control}</div>
-                            <div className="text-lg font-semibold text-blue-600">Control</div>
-                            <div className="text-sm text-blue-500 mt-2">Normal cognitive function</div>
-                          </CardContent>
-                        </Card>
-                        <Card className="border-yellow-300 bg-yellow-50 shadow-lg">
-                          <CardContent className="p-6 text-center">
-                            <div className="text-3xl font-bold text-yellow-700">{counts.mci}</div>
-                            <div className="text-lg font-semibold text-yellow-600">MCI</div>
-                            <div className="text-sm text-yellow-500 mt-2">Mild Cognitive Impairment</div>
-                          </CardContent>
-                        </Card>
-                        <Card className="border-orange-300 bg-orange-50 shadow-lg">
-                          <CardContent className="p-6 text-center">
-                            <div className="text-3xl font-bold text-orange-700">{counts.alzheimer}</div>
-                            <div className="text-lg font-semibold text-orange-600">Alzheimer's</div>
-                            <div className="text-sm text-orange-500 mt-2">High risk indication</div>
-                          </CardContent>
-                        </Card>
-                      </>
-                    );
-                  })()}
-                </div>
-
-                {/* Results Table */}
-                <div className="space-y-4">
-                  <h3 className="text-xl font-bold">Sample Predictions:</h3>
-                  <div className="border rounded-lg overflow-hidden shadow-sm">
-                    <table className="w-full">
-                      <thead className="bg-gray-50 border-b">
-                        <tr>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Sample ID</th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Classification</th>
-                          <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Risk Level</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
-                        {analysisResults.results[0].predictions_with_ids.map((item: any, index: number) => {
-                          const getClassificationDetails = (pred: number) => {
-                            switch (pred) {
-                              case 0:
-                                return {
-                                  label: "Control",
-                                  description: "Normal cognitive function",
-                                  bgColor: "bg-blue-50",
-                                  textColor: "text-blue-800",
-                                  badgeColor: "bg-blue-200 text-blue-900",
-                                  icon: "🔵"
-                                };
-                              case 1:
-                                return {
-                                  label: "MCI",
-                                  description: "Mild Cognitive Impairment",
-                                  bgColor: "bg-yellow-50", 
-                                  textColor: "text-yellow-800",
-                                  badgeColor: "bg-yellow-200 text-yellow-900",
-                                  icon: "🟡"
-                                };
-                              case 2:
-                                return {
-                                  label: "Alzheimer's",
-                                  description: "High risk indication",
-                                  bgColor: "bg-orange-50",
-                                  textColor: "text-orange-800", 
-                                  badgeColor: "bg-orange-200 text-orange-900",
-                                  icon: "🟠"
-                                };
-                              default:
-                                return {
-                                  label: "Unknown",
-                                  description: "Unrecognized classification",
-                                  bgColor: "bg-gray-50",
-                                  textColor: "text-gray-800",
-                                  badgeColor: "bg-gray-200 text-gray-900",
-                                  icon: "⚪"
-                                };
-                            }
-                          };
-
-                          const details = getClassificationDetails(item.prediction);
-
+                {/* Summary Cards for both models */}
+                <div className="space-y-6">
+                  {analysisResults.results.map((modelResult: any, modelIndex: number) => (
+                    <div key={modelIndex} className="space-y-4">
+                      <h2 className="text-2xl font-bold capitalize">{modelResult.model_name} Model Results</h2>
+                      
+                      {/* Summary Cards for this model */}
+                      <div className="grid grid-cols-3 gap-6 mb-6">
+                        {(() => {
+                          const predictions = modelResult.predictions_with_ids || [];
+                          const counts = { control: 0, mci: 0, alzheimer: 0 };
+                          predictions.forEach((item: any) => {
+                            if (item.prediction === 0) counts.control++;
+                            else if (item.prediction === 1) counts.mci++;
+                            else if (item.prediction === 2) counts.alzheimer++;
+                          });
+                          
                           return (
-                            <tr key={index} className={`${details.bgColor} hover:opacity-75 transition-opacity`}>
-                              <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                                {item.sample_id}
-                              </td>
-                              <td className="px-6 py-4">
-                                <div className="flex items-center space-x-3">
-                                  <span className="text-xl">{details.icon}</span>
-                                  <Badge className={`${details.badgeColor} font-medium px-3 py-1`}>
-                                    {details.label}
-                                  </Badge>
-                                </div>
-                              </td>
-                              <td className={`px-6 py-4 text-sm ${details.textColor} font-medium`}>
-                                {details.description}
-                              </td>
-                            </tr>
+                            <>
+                              <Card className="border-blue-300 bg-blue-50 shadow-lg">
+                                <CardContent className="p-6 text-center">
+                                  <div className="text-3xl font-bold text-blue-700">{counts.control}</div>
+                                  <div className="text-lg font-semibold text-blue-600">Control</div>
+                                  <div className="text-sm text-blue-500 mt-2">Normal cognitive function</div>
+                                </CardContent>
+                              </Card>
+                              <Card className="border-yellow-300 bg-yellow-50 shadow-lg">
+                                <CardContent className="p-6 text-center">
+                                  <div className="text-3xl font-bold text-yellow-700">{counts.mci}</div>
+                                  <div className="text-lg font-semibold text-yellow-600">MCI</div>
+                                  <div className="text-sm text-yellow-500 mt-2">Mild Cognitive Impairment</div>
+                                </CardContent>
+                              </Card>
+                              <Card className="border-orange-300 bg-orange-50 shadow-lg">
+                                <CardContent className="p-6 text-center">
+                                  <div className="text-3xl font-bold text-orange-700">{counts.alzheimer}</div>
+                                  <div className="text-lg font-semibold text-orange-600">Alzheimer's</div>
+                                  <div className="text-sm text-orange-500 mt-2">High risk indication</div>
+                                </CardContent>
+                              </Card>
+                            </>
                           );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
+                        })()}
+                      </div>
+
+                      {/* Results Table for this model */}
+                      <div className="space-y-4">
+                        <h3 className="text-xl font-bold">Sample Predictions ({modelResult.model_name}):</h3>
+                        <div className="border rounded-lg overflow-hidden shadow-sm">
+                          <table className="w-full">
+                            <thead className="bg-gray-50 border-b">
+                              <tr>
+                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Sample ID</th>
+                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Classification</th>
+                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Risk Level</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+                              {(modelResult.predictions_with_ids || []).map((item: any, index: number) => {
+                                const getClassificationDetails = (pred: number) => {
+                                  switch (pred) {
+                                    case 0:
+                                      return {
+                                        label: "Control",
+                                        description: "Normal cognitive function",
+                                        bgColor: "bg-blue-50",
+                                        textColor: "text-blue-800",
+                                        badgeColor: "bg-blue-200 text-blue-900",
+                                        icon: "🔵"
+                                      };
+                                    case 1:
+                                      return {
+                                        label: "MCI",
+                                        description: "Mild Cognitive Impairment",
+                                        bgColor: "bg-yellow-50", 
+                                        textColor: "text-yellow-800",
+                                        badgeColor: "bg-yellow-200 text-yellow-900",
+                                        icon: "🟡"
+                                      };
+                                    case 2:
+                                      return {
+                                        label: "Alzheimer's",
+                                        description: "High risk indication",
+                                        bgColor: "bg-orange-50",
+                                        textColor: "text-orange-800", 
+                                        badgeColor: "bg-orange-200 text-orange-900",
+                                        icon: "🟠"
+                                      };
+                                    default:
+                                      return {
+                                        label: "Unknown",
+                                        description: "Unrecognized classification",
+                                        bgColor: "bg-gray-50",
+                                        textColor: "text-gray-800",
+                                        badgeColor: "bg-gray-200 text-gray-900",
+                                        icon: "⚪"
+                                      };
+                                  }
+                                };
+
+                                const details = getClassificationDetails(item.prediction);
+
+                                return (
+                                  <tr key={index} className={`${details.bgColor} hover:opacity-75 transition-opacity`}>
+                                    <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                                      {item.sample_id}
+                                    </td>
+                                    <td className="px-6 py-4">
+                                      <div className="flex items-center space-x-3">
+                                        <span className="text-xl">{details.icon}</span>
+                                        <Badge className={`${details.badgeColor} font-medium px-3 py-1`}>
+                                          {details.label}
+                                        </Badge>
+                                      </div>
+                                    </td>
+                                    <td className={`px-6 py-4 text-sm ${details.textColor} font-medium`}>
+                                      {details.description}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
+
+                {/* Model Comparison Table */}
+                {analysisResults.results.length > 1 && analysisResults.results[0].predictions_with_ids && (
+                  <div className="space-y-4 mt-8">
+                    <h3 className="text-xl font-bold">Model Comparison:</h3>
+                    <div className="border rounded-lg overflow-hidden shadow-sm">
+                      <table className="w-full">
+                        <thead className="bg-gray-50 border-b">
+                          <tr>
+                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Sample ID</th>
+                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">XGBoost</th>
+                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">PyTorch</th>
+                            <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Agreement</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+                          {analysisResults.results[0].predictions_with_ids.map((item: any, index: number) => {
+                            const xgbPred = item.prediction;
+                            const pytorchPred = analysisResults.results[1]?.predictions_with_ids?.[index]?.prediction;
+                            const agreement = xgbPred === pytorchPred;
+                            
+                            const getPredLabel = (pred: number) => {
+                              switch (pred) {
+                                case 0: return { label: "Control", color: "text-blue-600", bg: "bg-blue-100" };
+                                case 1: return { label: "MCI", color: "text-yellow-600", bg: "bg-yellow-100" };
+                                case 2: return { label: "Alzheimer's", color: "text-orange-600", bg: "bg-orange-100" };
+                                default: return { label: "Unknown", color: "text-gray-600", bg: "bg-gray-100" };
+                              }
+                            };
+
+                            const xgbDetails = getPredLabel(xgbPred);
+                            const pytorchDetails = getPredLabel(pytorchPred);
+
+                            return (
+                              <tr key={index} className={agreement ? "bg-green-50" : "bg-red-50"}>
+                                <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                                  {item.sample_id}
+                                </td>
+                                <td className="px-6 py-4">
+                                  <Badge className={`${xgbDetails.bg} ${xgbDetails.color} font-medium px-3 py-1`}>
+                                    {xgbDetails.label}
+                                  </Badge>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <Badge className={`${pytorchDetails.bg} ${pytorchDetails.color} font-medium px-3 py-1`}>
+                                    {pytorchDetails.label}
+                                  </Badge>
+                                </td>
+                                <td className="px-6 py-4">
+                                  <Badge className={agreement ? "bg-green-200 text-green-800" : "bg-red-200 text-red-800"}>
+                                    {agreement ? "✓ Match" : "✗ Differ"}
+                                  </Badge>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
               <div className="text-center py-12">
                 <p className="text-xl text-gray-500 mb-4">No prediction data found in the response.</p>
-                <p className="text-sm text-gray-400">Expected format: results[0].predictions_with_ids</p>
+                <p className="text-sm text-gray-400">Expected format: results array with predictions_with_ids</p>
                 <div className="mt-4 p-4 bg-gray-100 rounded text-left text-xs">
                   <strong>Actual response structure:</strong>
                   <pre>{JSON.stringify(analysisResults, null, 2)}</pre>

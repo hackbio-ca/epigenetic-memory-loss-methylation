@@ -5,7 +5,8 @@ from fastapi import APIRouter, Form, Request
 from typing import Optional
 import pprint
 import pandas as pd
-import io
+import io, numpy as np
+import shap
 
 router = APIRouter(prefix="/predict", tags=["predictions"])
 
@@ -70,21 +71,58 @@ async def predict_endpoint(
                 from ..models.loader import load_xgboost_model, load_pytorch_model
                 
                 print("Loading models...")
-                xgb_model = load_xgboost_model()
-                print("XGBoost model loaded")
+                try:
+                    xgb_model = load_xgboost_model()
+                    print("XGBoost model loaded successfully")
+                except Exception as xgb_error:
+                    print(f"XGBoost model loading failed: {xgb_error}")
+                    raise Exception(f"Failed to load XGBoost model: {xgb_error}")
+                
+                try:
+                    pytorch_model = load_pytorch_model()
+                    print("PyTorch model loaded successfully")
+                except Exception as pytorch_error:
+                    print(f"PyTorch model loading failed: {pytorch_error}")
+                    raise Exception(f"Failed to load PyTorch model: {pytorch_error}")
                 
                 # Make predictions
+                print("Making XGBoost predictions...")
                 xgb_predictions = xgb_model.predict(data)
                 print(f"XGBoost predictions: {xgb_predictions[:5]}...")  # Show first 5
                 
-                # Create predictions with sample IDs
-                predictions_with_ids = []
-                for i, (sample_id, prediction) in enumerate(zip(sample_ids, xgb_predictions)):
-                    predictions_with_ids.append({
-                        "sample_id": sample_id,
-                        "prediction": int(prediction) if hasattr(prediction, 'item') else prediction
-                    })
+                print("Making PyTorch predictions...")
+                pytorch_predictions = pytorch_model.predict(data)
+                print(f"PyTorch predictions: {pytorch_predictions[:5]}...")  # Show first 5
+
+                # Create predictions with sample IDs for both models
+                xgb_predictions_with_ids = []
+                pytorch_predictions_with_ids = []
                 
+                for i, sample_id in enumerate(sample_ids):
+                    xgb_pred = int(xgb_predictions[i]) if hasattr(xgb_predictions[i], 'item') else xgb_predictions[i]
+                    pytorch_pred = int(pytorch_predictions[i]) if hasattr(pytorch_predictions[i], 'item') else pytorch_predictions[i]
+                    
+                    xgb_predictions_with_ids.append({
+                        "sample_id": sample_id,
+                        "prediction": xgb_pred
+                    })
+                    
+                    pytorch_predictions_with_ids.append({
+                        "sample_id": sample_id,
+                        "prediction": pytorch_pred
+                    })
+
+                # # MARK: Shap Analysis
+                # explainer = shap.Explainer(xgb_model, data)
+                # shap_values = explainer(data) 
+
+                # Load feature names if available
+                try:
+                    with open("./disease_CpG_sites.txt", "r") as f:
+                        feature_names = f.read().strip().splitlines()
+                except:
+                    feature_names = []
+
                 return {
                     "success": True,
                     "message": "Prediction completed successfully",
@@ -92,9 +130,15 @@ async def predict_endpoint(
                         {
                             "model_name": "xgboost",
                             "prediction": xgb_predictions.tolist() if hasattr(xgb_predictions, 'tolist') else list(xgb_predictions),
-                            "predictions_with_ids": predictions_with_ids
+                            "predictions_with_ids": xgb_predictions_with_ids
+                        },
+                        {
+                            "model_name": "pytorch", 
+                            "prediction": pytorch_predictions.tolist() if hasattr(pytorch_predictions, 'tolist') else list(pytorch_predictions),
+                            "predictions_with_ids": pytorch_predictions_with_ids
                         }
                     ],
+                    "feature_names": feature_names,
                     "metadata": {
                         "studyName": studyName,
                         "studyDescription": studyDescription,

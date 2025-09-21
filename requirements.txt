@@ -8,13 +8,15 @@ matplotlib
 plotly
 h5py
 joblib
-seaborn
-statsmodels
-umap-learn
-umap-learn[plot]
 # Backend
 fastapi
 uvicorn
 python-multipart
 pydantic
 pydantic-settings
+# Vis
+shap
+seaborn
+statsmodels
+umap-learn
+umap-learn[plot]
