@@ -3,6 +3,8 @@
 import { useState } from "react"
 import { FileUploadSection } from "@/components/file-upload-section"
 import { StatsCards } from "@/components/stats-cards"
+import { ShapVisualization } from "@/components/shap-visualization"
+import { SimpleShapVisualization } from "@/components/simple-shap-visualization"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
@@ -364,6 +366,26 @@ export default function HomePage() {
                         </tbody>
                       </table>
                     </div>
+                  </div>
+                )}
+                
+                {/* SHAP Analysis Section */}
+                {analysisResults?.shap_analysis && (
+                  <div className="mt-8">
+                    {analysisResults.shap_analysis.shap_data && analysisResults.shap_analysis.shap_data.length > 0 ? (
+                      // Full SHAP visualization with sample-level data
+                      <ShapVisualization 
+                        shapData={analysisResults.shap_analysis.shap_data}
+                        topFeatures={analysisResults.shap_analysis.top_features || []}
+                        featureNames={analysisResults.shap_analysis.feature_names || []}
+                      />
+                    ) : (
+                      // Simplified SHAP visualization with just feature importance
+                      <SimpleShapVisualization 
+                        topFeatures={analysisResults.shap_analysis.top_features || []}
+                        featureNames={analysisResults.shap_analysis.feature_names || []}
+                      />
+                    )}
                   </div>
                 )}
               </>

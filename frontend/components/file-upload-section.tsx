@@ -145,6 +145,10 @@ export function FileUploadSection({ onAnalysisComplete }: FileUploadSectionProps
       clearInterval(progressInterval)
       setUploadProgress(100)
 
+      // Debug: Log the full response
+      console.log('API Response:', res.data)
+      console.log('SHAP Analysis:', res.data?.shap_analysis)
+
       // Call the callback with the API response
       if (onAnalysisComplete) {
         onAnalysisComplete(res.data)
