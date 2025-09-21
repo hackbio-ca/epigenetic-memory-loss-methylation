@@ -99,7 +99,6 @@ class ModelService:
     
     def _predict_sklearn(self, data: np.ndarray) -> Dict[str, Any]:
         prediction = self.model.predict(data)
-        print(prediction)
         return prediction
         '''if hasattr(self.model, 'predict_proba'):
             binary_probs = self.model.predict_proba(data)

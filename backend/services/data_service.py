@@ -46,7 +46,6 @@ class DataService:
                 "rows": len(df),
                 "columns": len(df.columns)
             }
-            print(metadata)
             # Convert back to numpy array
             data_array = df.T.values   # shape will be (1, n_features)
 

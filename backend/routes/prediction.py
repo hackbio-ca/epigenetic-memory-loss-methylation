@@ -38,8 +38,8 @@ async def predict_from_file(
         
         data, metadata = await data_service.process_uploaded_file(file)
         result = model_service.predict(data)
-        print("ok?")
-        return PredictionResponse(result)
+        print(result)
+        return {"prediction":str(result)}
         '''return PredictionResponse(
             sample_id=metadata.get("original_filename", "unknown"),
             prediction=result["prediction"],
