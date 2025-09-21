@@ -1,3 +1,4 @@
+# Model
 torch==2.2.0
 scikit-learn
 xgboost
@@ -11,3 +12,5 @@ seaborn
 statsmodels
 umap-learn
 umap-learn[plot]
+# Backend
+fastapi
