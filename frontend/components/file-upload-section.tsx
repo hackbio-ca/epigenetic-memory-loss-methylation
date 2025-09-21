@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { Upload, FileText, CheckCircle, AlertCircle, X, Send } from "lucide-react"
+import { axiosInstance } from "@/lib/axios"
 
 interface UploadedFile {
   name: string
@@ -119,8 +120,23 @@ export function FileUploadSection() {
         setUploadProgress((prev) => Math.min(prev + 10, 90))
       }, 200)
 
+      // Debug FormData contents properly
+      console.log("=== FormData Debug ===")
+      console.log("studyName:", formData.get("studyName"))
+      console.log("studyDescription:", formData.get("studyDescription"))
+      uploadedFiles.forEach((file, index) => {
+        console.log(`file_${index}:`, formData.get(`file_${index}`))
+      })
+      console.log("uploadedFiles:", uploadedFiles)
+
       // Simulate backend processing time
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      const res = await axiosInstance.post('/predict', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+
+      console.log("Upload response:", res.data)
 
       clearInterval(progressInterval)
       setUploadProgress(100)

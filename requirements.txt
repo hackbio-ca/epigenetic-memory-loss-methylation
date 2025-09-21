@@ -16,3 +16,5 @@ umap-learn[plot]
 fastapi
 uvicorn
 python-multipart
+pydantic
+pydantic-settings
