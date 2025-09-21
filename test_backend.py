@@ -63,7 +63,7 @@ def test_backend():
     
     # Test file upload prediction
     try:
-        with open('sample_methylation_data.csv', 'rb') as f:
+        with open('out.csv', 'rb') as f:
             response = requests.post(f"{base_url}/api/v1/predict", files={'file': f})
             if response.status_code == 200:
                 result = response.json()
@@ -77,7 +77,7 @@ def test_backend():
                 print(f"❌ File upload prediction failed: {response.status_code}")
                 print(f"   Error: {response.text}")
     except FileNotFoundError:
-        print("❌ Sample data file not found. Please ensure sample_methylation_data.csv exists")
+        print("❌ Sample data file not found. Please ensure out.csv exists")
     except Exception as e:
         print(f"❌ File upload prediction error: {e}")
     

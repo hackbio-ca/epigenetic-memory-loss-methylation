@@ -49,12 +49,24 @@ class DataService:
 
             # Convert back to numpy array
             data_array = df.T.values   # shape will be (1, n_features)
-
-            # Create an HDF5 file and store it
-            with h5py.File(io.BytesIO(), "w") as f:
-                f.create_dataset("data", data=data_array)
-                data = f["data"][0, featureIndices]
+            
+            # Apply feature selection using the top 500 features
+            if data_array.shape[1] >= len(featureIndices):
+                data = data_array[0, featureIndices]
                 data = data.reshape(1, -1)
+            else:
+                # If we don't have enough features, pad with zeros or use available features
+                logger.warning(f"Not enough features in data. Expected {len(featureIndices)}, got {data_array.shape[1]}")
+                if data_array.shape[1] > 0:
+                    # Use available features up to the limit
+                    available_indices = featureIndices[featureIndices < data_array.shape[1]]
+                    data = data_array[0, available_indices]
+                    # Pad with zeros if needed
+                    if len(available_indices) < len(featureIndices):
+                        padding = np.zeros((1, len(featureIndices) - len(available_indices)))
+                        data = np.concatenate([data, padding], axis=1)
+                else:
+                    raise ValueError("No valid features found in the data")
             
             return data, metadata
             

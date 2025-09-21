@@ -5,11 +5,11 @@ import h5py
 import io
 
 #Load the pre-trained model
-model = joblib.load('temp.pkl')
+model = joblib.load('../Temp.pkl')
 
 #Temporary
 #Load selected features
-total_mean_SHAP_values = np.loadtxt("Disease_SHAP_Values.txt")
+total_mean_SHAP_values = np.loadtxt("../Disease_SHAP_Values.txt")
 topNFeatures = np.argsort(total_mean_SHAP_values)[-500:][::-1].tolist()
 featureIndices = np.array(sorted(topNFeatures))
 '''
@@ -26,17 +26,39 @@ df = pd.DataFrame(data, columns=Site_Names).T
 df.to_csv("out.csv", index=True)'''
 
 # Load your CSV (out.csv created before)
-df = pd.read_csv("out.csv", index_col=0)  # CpG sites are in the index
+df = pd.read_csv("../out.csv", index_col=0)  # CpG sites are in the index
 print(df.head())
 
 # Convert back to numpy array
 data_array = df.T.values   # shape will be (1, n_features)
+print(f"Data array shape: {data_array.shape}")
 
-# Create an HDF5 file and store it
-with h5py.File("single_sample.h5", "w") as f:
-    f.create_dataset("data", data=data_array)
-    data = f["data"][0, featureIndices]
+# Apply feature selection using the top 500 features
+if data_array.shape[1] >= len(featureIndices):
+    data = data_array[0, featureIndices]
     data = data.reshape(1, -1)
+    print(f"Selected features shape: {data.shape}")
+else:
+    print(f"Warning: Not enough features. Available: {data_array.shape[1]}, Required: {len(featureIndices)}")
+    # Use available features and pad with zeros
+    available_indices = featureIndices[featureIndices < data_array.shape[1]]
+    data = data_array[0, available_indices]
+    # Pad with zeros if needed
+    if len(available_indices) < len(featureIndices):
+        padding = np.zeros((1, len(featureIndices) - len(available_indices)))
+        data = np.concatenate([data, padding], axis=1)
+    print(f"Padded features shape: {data.shape}")
 
+# Create an HDF5 file and store the processed data
+with h5py.File("single_sample.h5", "w") as f:
+    f.create_dataset("data", data=data)
+    print("✅ H5 file created successfully")
+
+# Make prediction
 prediction = model.predict(data)
-print(prediction)
+print(f"✅ Prediction: {prediction}")
+
+# Get prediction probabilities if available
+if hasattr(model, 'predict_proba'):
+    probabilities = model.predict_proba(data)
+    print(f"✅ Probabilities: {probabilities}")

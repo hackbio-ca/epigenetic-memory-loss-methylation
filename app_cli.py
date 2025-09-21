@@ -84,7 +84,7 @@ class MethylationCLI:
         
         print("="*60)
     
-    def test_file_upload(self, file_path: str = "sample_methylation_data.csv"):
+    def test_file_upload(self, file_path: str = "out.csv"):
         try:
             print(f"\n📁 Testing File Upload: {file_path}")
             
@@ -145,13 +145,13 @@ class MethylationCLI:
         
         # Test file upload if sample file exists
         try:
-            with open("sample_methylation_data.csv", 'r'):
+            with open("out.csv", 'r'):
                 file_result = self.test_file_upload()
                 if file_result:
                     print("\n📁 File Upload Results:")
                     self.display_results(file_result)
         except FileNotFoundError:
-            print("\n📁 Sample file not found, skipping file upload test")
+            print("\n📁 out.csv file not found, skipping file upload test")
         
         print("\n🎉 All tests completed!")
         print("🌐 Web interface available at: http://localhost:8000")

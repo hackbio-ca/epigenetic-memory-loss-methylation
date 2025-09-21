@@ -8,7 +8,7 @@ from backend.services.model_service import ModelService
 
 import pandas as pd
 import joblib
-model = joblib.load("temp.pkl")
+model = joblib.load("Temp.pkl")
 import h5py
 import numpy as np
 import io
