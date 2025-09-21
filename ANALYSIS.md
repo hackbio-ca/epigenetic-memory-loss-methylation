@@ -23,9 +23,6 @@ PCC is a method that visualizes the correlation between the data features. This 
 
 As seen in the plot above, there is 3 definite grids representing these feature clusters, we see that the color-coded labels (blue = control | alzheimers = red | mci = yellow) show separation and grouping based on feature clusters. This provides an evidence for a relation between the blood methylation data and cognitive diseases.
 
-### SHAP
-
-
 ### Evaluation
 
 You can find the classification network evaluation metrics below for reference. There's definitely room for improvement through researching model architectures, fine-tuning, and better analysis & pre-processing of the dataaset.
