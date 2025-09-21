@@ -17,7 +17,8 @@ class PredictionRequest(BaseModel):
     sample_id: str = Field(..., description="Unique identifier for the sample")
 
 class PredictionResponse(BaseModel):
-    sample_id: str
+    prediction: str
+    '''sample_id: str
     prediction: DiseaseClass
     confidence: float = Field(..., ge=0, le=1, description="Confidence score between 0 and 1")
     probabilities: Dict[str, float] = Field(..., description="Probability for each disease class")
@@ -26,7 +27,7 @@ class PredictionResponse(BaseModel):
     risk_level: RiskLevel = Field(..., description="Clinical risk assessment")
     risk_percentage: float = Field(..., ge=0, le=100, description="Risk percentage for primary prediction")
     calibration_score: Optional[float] = Field(None, ge=0, le=1, description="Model calibration score")
-
+'''
 class ModelInfo(BaseModel):
     model_loaded: bool
     model_type: Optional[str]

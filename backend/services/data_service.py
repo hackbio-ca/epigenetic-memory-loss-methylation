@@ -4,6 +4,12 @@ import io
 import logging
 from typing import Dict, Any, Tuple, Optional
 from fastapi import UploadFile
+import h5py
+
+#Load selected features
+total_mean_SHAP_values = np.loadtxt("Disease_SHAP_Values.txt")
+topNFeatures = np.argsort(total_mean_SHAP_values)[-500:][::-1].tolist()
+featureIndices = np.array(sorted(topNFeatures))
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +35,8 @@ class DataService:
             if len(content) > self.max_file_size:
                 raise ValueError(f"File too large. Maximum size: {self.max_file_size / (1024*1024):.1f}MB")
             
-            df = pd.read_csv(io.BytesIO(content))
-            
+            df = pd.read_csv(io.BytesIO(content), index_col=0)
+            print(df.head())
             if df.empty:
                 raise ValueError("Empty CSV file")
             
@@ -40,8 +46,14 @@ class DataService:
                 "rows": len(df),
                 "columns": len(df.columns)
             }
-            
-            data = self._preprocess_dataframe(df, metadata)
+            # Convert back to numpy array
+            data_array = df.T.values   # shape will be (1, n_features)
+
+            # Create an HDF5 file and store it
+            with h5py.File(io.BytesIO(), "w") as f:
+                f.create_dataset("data", data=data_array)
+                data = f["data"][0, featureIndices]
+                data = data.reshape(1, -1)
             
             return data, metadata
             

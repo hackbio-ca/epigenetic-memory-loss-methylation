@@ -7,8 +7,6 @@ from backend.routes import prediction, health
 from backend.services.model_service import ModelService
 
 import pandas as pd
-import joblib
-model = joblib.load("temp.pkl")
 import h5py
 import numpy as np
 import io
@@ -17,10 +15,6 @@ import io
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-#Load selected features
-total_mean_SHAP_values = np.loadtxt("Disease_SHAP_Values.txt")
-topNFeatures = np.argsort(total_mean_SHAP_values)[-500:][::-1].tolist()
-featureIndices = np.array(sorted(topNFeatures))
 
 # Global model service instance
 model_service_instance = None
@@ -451,6 +445,7 @@ async def read_root():
                         method: 'POST',
                         body: formData
                     });
+                    console.log(response);
                     
                     if (!response.ok) {
                         const errorData = await response.json();
@@ -545,32 +540,6 @@ async def read_root():
     </body>
     </html>
     """
-
-@app.post("/predict/")
-async def predict(file: UploadFile = File(...)):
-    # Read uploaded CSV
-    contents = await file.read()
-    df = pd.read_csv(io.StringIO(contents.decode("utf-8")), index_col=0)
-
-    # Convert to numpy array (1 sample, n_features)
-    data_array = df.T.values  # shape (1, n_features)
-
-    # Ensure we have enough columns for featureIndices
-    max_index = featureIndices.max()
-    if data_array.shape[1] <= max_index:
-        # pad missing features with 0
-        padded = np.zeros((1, max_index + 1))
-        padded[:, :data_array.shape[1]] = data_array
-        data_array = padded
-
-    # Create an **in-memory HDF5 file**
-    with h5py.File(io.BytesIO(), "w") as h5f:
-        h5f.create_dataset("data", data=data_array)
-        # Select the top features inside HDF5
-        data = h5f["data"][:, featureIndices]
-        prediction = model.predict(data)
-
-    return {"prediction": prediction.tolist()}
 
 if __name__ == "__main__":
     import uvicorn

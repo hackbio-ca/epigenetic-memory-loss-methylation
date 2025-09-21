@@ -38,8 +38,9 @@ async def predict_from_file(
         
         data, metadata = await data_service.process_uploaded_file(file)
         result = model_service.predict(data)
-        
-        return PredictionResponse(
+        print(result)
+        return {"prediction":str(result)}
+        '''return PredictionResponse(
             sample_id=metadata.get("original_filename", "unknown"),
             prediction=result["prediction"],
             confidence=result["confidence"],
@@ -49,7 +50,7 @@ async def predict_from_file(
             risk_level=result["risk_level"],
             risk_percentage=result["risk_percentage"],
             calibration_score=result["calibration_score"]
-        )
+        )'''
         
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))

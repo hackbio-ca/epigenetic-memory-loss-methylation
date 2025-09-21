@@ -98,7 +98,9 @@ class ModelService:
             raise Exception(f"Prediction failed: {str(e)}")
     
     def _predict_sklearn(self, data: np.ndarray) -> Dict[str, Any]:
-        if hasattr(self.model, 'predict_proba'):
+        prediction = self.model.predict(data)
+        return prediction
+        '''if hasattr(self.model, 'predict_proba'):
             binary_probs = self.model.predict_proba(data)
             
             if self.is_binary and binary_probs.shape[1] == 2:
@@ -149,7 +151,7 @@ class ModelService:
         
         return self._format_prediction_result(
             prediction_idx, confidence, probabilities, feature_importance
-        )
+        )'''
     
     def _predict_pytorch(self, data: np.ndarray) -> Dict[str, Any]:
         self.model.eval()
