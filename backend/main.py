@@ -7,8 +7,6 @@ from backend.routes import prediction, health
 from backend.services.model_service import ModelService
 
 import pandas as pd
-import joblib
-model = joblib.load("temp.pkl")
 import h5py
 import numpy as np
 import io
@@ -17,10 +15,6 @@ import io
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-#Load selected features
-total_mean_SHAP_values = np.loadtxt("Disease_SHAP_Values.txt")
-topNFeatures = np.argsort(total_mean_SHAP_values)[-500:][::-1].tolist()
-featureIndices = np.array(sorted(topNFeatures))
 
 # Global model service instance
 model_service_instance = None

@@ -36,7 +36,7 @@ class DataService:
                 raise ValueError(f"File too large. Maximum size: {self.max_file_size / (1024*1024):.1f}MB")
             
             df = pd.read_csv(io.BytesIO(content), index_col=0)
-            
+            print(df.head())
             if df.empty:
                 raise ValueError("Empty CSV file")
             
@@ -46,7 +46,7 @@ class DataService:
                 "rows": len(df),
                 "columns": len(df.columns)
             }
-
+            print(metadata)
             # Convert back to numpy array
             data_array = df.T.values   # shape will be (1, n_features)
 
