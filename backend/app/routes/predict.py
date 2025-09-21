@@ -10,6 +10,40 @@ import shap
 
 router = APIRouter(prefix="/predict", tags=["predictions"])
 
+def load_cpg_annotations():
+    """Load CpG site annotations from the annotation_filtered.csv file"""
+    try:
+        annotation_path = "./data/annotation_filtered.csv"  # Fixed path - backend runs from backend/ directory
+        df = pd.read_csv(annotation_path)
+        print(f"Loaded {len(df)} CpG annotations from {annotation_path}")
+        print(f"Columns in annotation file: {list(df.columns)}")
+        
+        # Create a dictionary with IlmnID as key and annotation data as value
+        annotations = {}
+        for _, row in df.iterrows():
+            cpg_id = row['IlmnID']
+            annotations[cpg_id] = {
+                'name': row['Name'] if pd.notna(row['Name']) else cpg_id,
+                'chromosome': str(row['CHR']) if pd.notna(row['CHR']) else 'Unknown',
+                'genomic_position': str(int(row['MAPINFO'])) if pd.notna(row['MAPINFO']) else 'Unknown',
+                'gene_names': row['UCSC_RefGene_Name'] if pd.notna(row['UCSC_RefGene_Name']) else 'Unknown',
+                'gene_regions': row['UCSC_RefGene_Group'] if pd.notna(row['UCSC_RefGene_Group']) else 'Unknown'
+            }
+        
+        print(f"Created annotations dictionary with {len(annotations)} CpG sites")
+        # Print a few sample annotations for debugging
+        sample_keys = list(annotations.keys())[:3]
+        for key in sample_keys:
+            print(f"Sample annotation for {key}: {annotations[key]}")
+        
+        return annotations
+        
+    except Exception as e:
+        print(f"Failed to load CpG annotations: {e}")
+        import traceback
+        traceback.print_exc()
+        return {}
+
 @router.post("/")
 async def predict_endpoint(
     request: Request,
@@ -314,6 +348,28 @@ async def predict_endpoint(
                             feature_names = []
                             print("No feature names available")
 
+                # Load CpG site annotations
+                print("Loading CpG site annotations...")
+                cpg_annotations = load_cpg_annotations()
+                
+                # Create annotations object for the features we're analyzing
+                feature_annotations = {}
+                for feature_name in feature_names:
+                    if feature_name in cpg_annotations:
+                        feature_annotations[feature_name] = cpg_annotations[feature_name]
+                    else:
+                        # If not found in annotations, create a placeholder
+                        feature_annotations[feature_name] = {
+                            'name': feature_name,
+                            'chromosome': 'Unknown',
+                            'genomic_position': 'Unknown',
+                            'gene_names': 'Unknown',
+                            'gene_regions': 'Unknown'
+                        }
+                
+                print(f"Created feature annotations for {len(feature_annotations)} features")
+                print(f"Found annotations for {sum(1 for v in feature_annotations.values() if v['chromosome'] != 'Unknown')} CpG sites")
+
                 return {
                     "success": True,
                     "message": "Prediction completed successfully",
@@ -332,7 +388,8 @@ async def predict_endpoint(
                     "shap_analysis": {
                         "shap_data": shap_data,
                         "top_features": top_features,
-                        "feature_names": feature_names
+                        "feature_names": feature_names,
+                        "cpg_annotations": feature_annotations
                     },
                     "feature_names": feature_names,
                     "metadata": {

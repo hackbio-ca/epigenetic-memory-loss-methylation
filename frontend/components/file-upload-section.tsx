@@ -12,6 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Progress } from "@/components/ui/progress"
 import { Upload, FileText, CheckCircle, AlertCircle, X, Send } from "lucide-react"
 import { axiosInstance } from "@/lib/axios"
+import { AnalysisLoadingDialog } from "@/components/analysis-loading-dialog"
 
 interface UploadedFile {
   name: string
@@ -33,6 +34,9 @@ export function FileUploadSection({ onAnalysisComplete }: FileUploadSectionProps
   const [studyName, setStudyName] = useState("")
   const [studyDescription, setStudyDescription] = useState("")
   const [error, setError] = useState("")
+  const [loadingStage, setLoadingStage] = useState<'uploading' | 'processing' | 'analyzing' | 'finalizing'>('uploading')
+  const [showLoadingDialog, setShowLoadingDialog] = useState(false)
+  const [abortController, setAbortController] = useState<AbortController | null>(null)
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -106,13 +110,17 @@ export function FileUploadSection({ onAnalysisComplete }: FileUploadSectionProps
       return
     }
 
+    // Immediately show loading dialog
+    setShowLoadingDialog(true)
     setIsUploading(true)
     setError("")
+    setUploadProgress(0)
+    setLoadingStage('uploading')
 
     try {
       console.log("[v0] Starting analysis with backend integration points")
 
-      // Simulate API call to /api/upload
+      // Prepare form data
       const formData = new FormData()
       formData.append("studyName", studyName)
       formData.append("studyDescription", studyDescription)
@@ -120,47 +128,106 @@ export function FileUploadSection({ onAnalysisComplete }: FileUploadSectionProps
         formData.append(`file_${index}`, file.file)
       })
 
-      const progressInterval = setInterval(() => {
-        setUploadProgress((prev) => Math.min(prev + 10, 90))
-      }, 200)
+      // Stage 1: Uploading (0-25%)
+      setLoadingStage('uploading')
+      const uploadProgressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev < 25) return prev + 2
+          return prev
+        })
+      }, 100)
 
-      // Debug FormData contents properly
+      // Debug FormData contents
       console.log("=== FormData Debug ===")
       console.log("studyName:", formData.get("studyName"))
       console.log("studyDescription:", formData.get("studyDescription"))
       uploadedFiles.forEach((file, index) => {
         console.log(`file_${index}:`, formData.get(`file_${index}`))
       })
-      console.log("uploadedFiles:", uploadedFiles)
 
-      // Simulate backend processing time
-      const res = await axiosInstance.post('/predict', formData, {
+      // Start the API call
+      const apiPromise = axiosInstance.post('/predict', formData, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       })
 
+      // Stage 2: Processing (25-50%)
+      setTimeout(() => {
+        setLoadingStage('processing')
+        setUploadProgress(25)
+        const processingInterval = setInterval(() => {
+          setUploadProgress((prev) => {
+            if (prev < 50) return prev + 1
+            clearInterval(processingInterval)
+            return prev
+          })
+        }, 150)
+      }, 1000)
+
+      // Stage 3: Analyzing (50-85%)
+      setTimeout(() => {
+        setLoadingStage('analyzing')
+        setUploadProgress(50)
+        const analyzingInterval = setInterval(() => {
+          setUploadProgress((prev) => {
+            if (prev < 85) return prev + 1
+            clearInterval(analyzingInterval)
+            return prev
+          })
+        }, 100)
+      }, 3000)
+
+      // Stage 4: Finalizing (85-95%)
+      setTimeout(() => {
+        setLoadingStage('finalizing')
+        setUploadProgress(85)
+        const finalizingInterval = setInterval(() => {
+          setUploadProgress((prev) => {
+            if (prev < 95) return prev + 0.5
+            clearInterval(finalizingInterval)
+            return prev
+          })
+        }, 200)
+      }, 8000)
+
+      // Wait for API response
+      const res = await apiPromise
+
       console.log("Upload response:", res.data)
 
-      clearInterval(progressInterval)
+      // Clear all intervals
+      clearInterval(uploadProgressInterval)
+      
+      // Complete progress
       setUploadProgress(100)
 
       // Debug: Log the full response
       console.log('API Response:', res.data)
       console.log('SHAP Analysis:', res.data?.shap_analysis)
 
+      // Small delay to show completion
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      // Hide loading dialog
+      setShowLoadingDialog(false)
+
       // Call the callback with the API response
       if (onAnalysisComplete) {
         onAnalysisComplete(res.data)
       }
 
+      // Reset form after a short delay
       setTimeout(() => {
         setUploadedFiles([])
         setStudyName("")
         setStudyDescription("")
         setUploadProgress(0)
       }, 1000)
+
     } catch (err) {
+      // Hide loading dialog on error
+      setShowLoadingDialog(false)
       setError(err instanceof Error ? err.message : "Analysis failed. Please try again.")
       setUploadProgress(0)
     } finally {
@@ -313,6 +380,16 @@ export function FileUploadSection({ onAnalysisComplete }: FileUploadSectionProps
           )}
         </Button>
       </CardContent>
+
+      {/* Loading Dialog */}
+      <AnalysisLoadingDialog
+        isOpen={showLoadingDialog}
+        onOpenChange={setShowLoadingDialog}
+        progress={uploadProgress}
+        stage={loadingStage}
+        fileName={uploadedFiles[0]?.name}
+        fileCount={uploadedFiles.length}
+      />
     </Card>
   )
 }
