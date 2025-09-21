@@ -384,6 +384,7 @@ export default function HomePage() {
                       <SimpleShapVisualization 
                         topFeatures={analysisResults.shap_analysis.top_features || []}
                         featureNames={analysisResults.shap_analysis.feature_names || []}
+                        cpgAnnotations={analysisResults.shap_analysis.cpg_annotations || {}}
                       />
                     )}
                   </div>

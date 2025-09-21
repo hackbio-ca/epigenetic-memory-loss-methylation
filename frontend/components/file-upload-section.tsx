@@ -104,6 +104,16 @@ export function FileUploadSection({ onAnalysisComplete }: FileUploadSectionProps
     setUploadProgress(0)
   }
 
+  const handleCancelAnalysis = () => {
+    if (abortController) {
+      abortController.abort()
+    }
+    setShowLoadingDialog(false)
+    setIsUploading(false)
+    setUploadProgress(0)
+    setError("Analysis cancelled by user")
+  }
+
   const handleAnalyze = async () => {
     if (uploadedFiles.length === 0 || !studyName.trim()) {
       setError("Please provide a study name and upload at least one file.")
