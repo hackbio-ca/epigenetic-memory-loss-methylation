@@ -14,3 +14,5 @@ umap-learn
 umap-learn[plot]
 # Backend
 fastapi
+uvicorn
+python-multipart
