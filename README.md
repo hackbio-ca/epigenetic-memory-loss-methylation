@@ -70,24 +70,3 @@ If you have any issues or need help, please open an [issue](https://github.com/h
 
 This project is licensed under the [MIT License](LICENSE).
 
-==========
-
-## Setup
-
-From the project directory, first set up the virtual environment by running:
-
-```
-python -m venv venv
-pip3 install -r requirements.txt
-```
-
-After, make sure that your front-end is set up. To do so simply run,
-
-```
-cd frontend
-npm install
-```
-
-You can simply run the front-end via `npm run dev`. Make sure to user port 3000 as CORS middleware in backend is allowed only for that port in dev mode.
-
-As for the model training, you can call the files in the fashion of `python -m model.data.loaders.loader_xgboost`, or `python -m model._dir1_._dir2_.target_file` in a more general format.
