@@ -21,7 +21,11 @@ interface UploadedFile {
   file: File
 }
 
-export function FileUploadSection() {
+interface FileUploadSectionProps {
+  onAnalysisComplete?: (result: any) => void
+}
+
+export function FileUploadSection({ onAnalysisComplete }: FileUploadSectionProps) {
   const [dragActive, setDragActive] = useState(false)
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [isUploading, setIsUploading] = useState(false)
@@ -141,10 +145,12 @@ export function FileUploadSection() {
       clearInterval(progressInterval)
       setUploadProgress(100)
 
+      // Call the callback with the API response
+      if (onAnalysisComplete) {
+        onAnalysisComplete(res.data)
+      }
+
       setTimeout(() => {
-        alert(
-          `Analysis complete! Processed ${uploadedFiles.length} file(s) for study: ${studyName}\n\nReady to connect to your backend API endpoints:\n- POST /api/upload\n- POST /api/analyze\n- GET /api/results`,
-        )
         setUploadedFiles([])
         setStudyName("")
         setStudyDescription("")
