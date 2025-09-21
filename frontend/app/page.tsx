@@ -175,17 +175,17 @@ export default function HomePage() {
             </DialogDescription>
           </DialogHeader>
           <div className="mt-6 space-y-6">
-            {analysisResults?.results?.[0]?.prediction ? (
+            {analysisResults?.results?.[0]?.predictions_with_ids ? (
               <>
                 {/* Summary Cards */}
                 <div className="grid grid-cols-3 gap-6 mb-8">
                   {(() => {
-                    const predictions = analysisResults.results[0].prediction;
+                    const predictions = analysisResults.results[0].predictions_with_ids;
                     const counts = { control: 0, mci: 0, alzheimer: 0 };
-                    predictions.forEach((pred: number) => {
-                      if (pred === 0) counts.control++;
-                      else if (pred === 1) counts.mci++;
-                      else if (pred === 2) counts.alzheimer++;
+                    predictions.forEach((item: any) => {
+                      if (item.prediction === 0) counts.control++;
+                      else if (item.prediction === 1) counts.mci++;
+                      else if (item.prediction === 2) counts.alzheimer++;
                     });
                     
                     return (
@@ -229,7 +229,7 @@ export default function HomePage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200 max-h-96 overflow-y-auto">
-                        {analysisResults.results[0].prediction.map((prediction: number, index: number) => {
+                        {analysisResults.results[0].predictions_with_ids.map((item: any, index: number) => {
                           const getClassificationDetails = (pred: number) => {
                             switch (pred) {
                               case 0:
@@ -271,12 +271,12 @@ export default function HomePage() {
                             }
                           };
 
-                          const details = getClassificationDetails(prediction);
+                          const details = getClassificationDetails(item.prediction);
 
                           return (
                             <tr key={index} className={`${details.bgColor} hover:opacity-75 transition-opacity`}>
                               <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                                Sample {index + 1}
+                                {item.sample_id}
                               </td>
                               <td className="px-6 py-4">
                                 <div className="flex items-center space-x-3">
@@ -300,7 +300,7 @@ export default function HomePage() {
             ) : (
               <div className="text-center py-12">
                 <p className="text-xl text-gray-500 mb-4">No prediction data found in the response.</p>
-                <p className="text-sm text-gray-400">Expected format: results[0].prediction</p>
+                <p className="text-sm text-gray-400">Expected format: results[0].predictions_with_ids</p>
                 <div className="mt-4 p-4 bg-gray-100 rounded text-left text-xs">
                   <strong>Actual response structure:</strong>
                   <pre>{JSON.stringify(analysisResults, null, 2)}</pre>

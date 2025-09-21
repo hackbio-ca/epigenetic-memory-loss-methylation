@@ -35,6 +35,7 @@ async def predict_endpoint(
         
         # Process CSV files
         data = []
+        sample_ids = []
         for file in files:
             print(f"Processing file: {file.filename}")
             if file.filename and file.filename.endswith('.csv'):
@@ -42,14 +43,25 @@ async def predict_endpoint(
                 df = pd.read_csv(io.StringIO(contents.decode('utf-8')))
                 print(f"CSV shape: {df.shape}")
                 print(f"CSV columns: {list(df.columns)}")
-                # Convert to numeric data
-                numeric_data = df.select_dtypes(include=['number']).values.tolist()
-                data.extend(numeric_data)
-                print(f"Extracted {len(numeric_data)} rows of numeric data")
+                
+                # Extract sample IDs (first column) and numeric data
+                if len(df.columns) > 0:
+                    # Get sample IDs from first column
+                    ids_from_file = df.iloc[:, 0].astype(str).tolist()
+                    sample_ids.extend(ids_from_file)
+                    print(f"Extracted {len(ids_from_file)} sample IDs: {ids_from_file[:3]}...")
+                    
+                    # Convert numeric data (excluding first column if it's non-numeric)
+                    numeric_data = df.select_dtypes(include=['number']).values.tolist()
+                    data.extend(numeric_data)
+                    print(f"Extracted {len(numeric_data)} rows of numeric data")
         
         print(f"Total data rows: {len(data)}")
+        print(f"Total sample IDs: {len(sample_ids)}")
         if data:
             print(f"Sample data (first row): {data[0][:5]}...")  # Show first 5 values
+        if sample_ids:
+            print(f"Sample IDs: {sample_ids[:5]}...")  # Show first 5 IDs
         
         # Now add model predictions
         if data:
@@ -65,20 +77,30 @@ async def predict_endpoint(
                 xgb_predictions = xgb_model.predict(data)
                 print(f"XGBoost predictions: {xgb_predictions[:5]}...")  # Show first 5
                 
+                # Create predictions with sample IDs
+                predictions_with_ids = []
+                for i, (sample_id, prediction) in enumerate(zip(sample_ids, xgb_predictions)):
+                    predictions_with_ids.append({
+                        "sample_id": sample_id,
+                        "prediction": int(prediction) if hasattr(prediction, 'item') else prediction
+                    })
+                
                 return {
                     "success": True,
                     "message": "Prediction completed successfully",
                     "results": [
                         {
                             "model_name": "xgboost",
-                            "prediction": xgb_predictions.tolist() if hasattr(xgb_predictions, 'tolist') else list(xgb_predictions)
+                            "prediction": xgb_predictions.tolist() if hasattr(xgb_predictions, 'tolist') else list(xgb_predictions),
+                            "predictions_with_ids": predictions_with_ids
                         }
                     ],
                     "metadata": {
                         "studyName": studyName,
                         "studyDescription": studyDescription,
                         "files_processed": len(files),
-                        "total_rows": len(data)
+                        "total_rows": len(data),
+                        "total_samples": len(sample_ids)
                     }
                 }
                 
