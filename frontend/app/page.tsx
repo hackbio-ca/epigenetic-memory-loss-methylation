@@ -165,7 +165,7 @@ export default function HomePage() {
 
       {/* Results Popup */}
       <Dialog open={showResults} onOpenChange={setShowResults}>
-        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-[90vw] lg:max-w-[95vw] xl:max-w-[98vw] max-h-[95vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold">
               Alzheimer's Risk Analysis Results
