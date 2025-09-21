@@ -9,7 +9,7 @@ warnings.filterwarnings("ignore")
 
 class MethylationAlzheimerDataset(Dataset):
 
-	def __init__(self, cpg_path, mapping_path, step=50):
+	def __init__(self, cpg_path, mapping_path, step=15000):
 
 		# Load methylation data from CSV
 		mapping_df = pd.read_csv(mapping_path)
@@ -22,7 +22,8 @@ class MethylationAlzheimerDataset(Dataset):
 		# Merge data and labels
 		merged = pd.concat([cpg_df, mapping_df], axis=1, join='outer')
 		self.labels = merged['disease_state'].map({'control': 0, 'MCI': 1, "Alzheimer's": 2}).values
-		self.data = merged.drop(columns=['disease_state', 'series_id', 'sex', 'age']).values[:, ::step]
+		# step = step if step < data.shape[1] else data.shape[1]
+		self.data = merged.drop(columns=['disease_state', 'series_id', 'sex', 'age']).values[:, :step]
 		print(f"Loaded dataset with {self.data.shape[0]} samples and {self.data.shape[1]} features.")
 		
 		

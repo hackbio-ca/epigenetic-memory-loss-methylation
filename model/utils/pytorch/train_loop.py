@@ -1,20 +1,51 @@
 import torch
+import torch.nn as nn
 
 def train_loop(dataloader, model, loss_fn, optimizer, batch_size):
+    """
+    Simplified training loop - shows metrics for the entire epoch
+    
+    Args:
+        dataloader: Training data loader
+        model: PyTorch model
+        loss_fn: Loss function (typically nn.CrossEntropyLoss())
+        optimizer: Optimizer (e.g., Adam, SGD)
+        batch_size: Batch size for training
+    
+    Returns:
+        model: Trained model
+    """
     size = len(dataloader.dataset)
-    # Set the model to training mode - important for batch normalization and dropout layers
-    # Unnecessary in this situation but added for best practices
-    model.train()
+    num_batches = len(dataloader)
+    model.train()  # Set model to training mode
+    
+    # Epoch-level metrics
+    total_loss = 0.0
+    correct_predictions = 0
+    
     for batch, (X, y) in enumerate(dataloader):
-        # Compute prediction and loss
-        pred = model(X)
-        loss = loss_fn(pred, y)
-
-        # Backpropagation
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-
-        if batch % 100 == 0:
-            loss, current = loss.item(), batch * batch_size + len(X)
-            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+        # Forward pass
+        logits = model(X)
+        
+        # Compute cross-entropy loss (PyTorch built-in)
+        loss = loss_fn(logits, y)
+        
+        # Backward pass and optimization
+        optimizer.zero_grad()  # Clear gradients
+        loss.backward()        # Compute gradients
+        optimizer.step()       # Update parameters
+        
+        # Accumulate metrics for the epoch (computed consistently)
+        with torch.no_grad():
+            # Use the same logits for both loss and accuracy
+            total_loss += loss.item()
+            predictions = torch.argmax(logits, dim=1)
+            correct_predictions += (predictions == y).sum().item()
+    
+    # Calculate epoch metrics
+    avg_loss = total_loss / num_batches
+    accuracy = (correct_predictions / size) * 100
+    
+    print(f"Training - Loss: {avg_loss:.6f}, Accuracy: {accuracy:.2f}%")
+    
+    return model

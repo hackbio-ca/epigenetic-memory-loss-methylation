@@ -9,7 +9,7 @@ import time, os, argparse
 import sys
 sys.path.append('./model')
 
-from data.loaders.loader_xgboost import load_data
+from data.loaders.loader_xgboost import load_data, load_data_h5
 
 def kfold_cv(model, X, y, k=5):
     """
@@ -41,9 +41,9 @@ if __name__ == "__main__":
 
     # Train Options (Settings)
     params = {
-        "max_depth": 51,
-        # "learning_rate": 0.3,
-        "n_estimators": 200,
+        "max_depth": 13,
+        "learning_rate": 0.1,
+        "n_estimators": 100,
         "objective": "recall_weighted",
         "booster": "gbtree",
         "gamma": 0,
@@ -57,13 +57,15 @@ if __name__ == "__main__":
 
     # Train data
     data_train_path = './model/data/train/methylation.csv'
+    data_train_h5 = './model/data/train/methylation.h5'
     idmap_train_path = './model/data/train/idmap.csv'
     # Test data
     data_test_path = './model/data/test/methylation.csv'
     idmap_test_path = './model/data/test/idmap.csv'
 
     # Load Train Data
-    X_train, y_train = load_data(data_train_path, idmap_train_path)
+    # X_train, y_train = load_data(data_train_path, idmap_train_path)
+    X_train, y_train = load_data_h5(data_train_h5, idmap_train_path)
     print(f"Train data shape: {X_train.shape}, Train label shape: {y_train.shape}")
 
     model = XGBoostModel(params=params)
